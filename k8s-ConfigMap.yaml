@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configuration-dds-router
+data:
+  ENV_DISPLAY: ':0'
+  ENV_XAUTHORITY: /run/user/1000/.mutter-Xwaylandauth.PCMQQ1
+  ENV_QT_X11_NO_MITSHM: '1'

@@ -1,0 +1,35 @@
+# configuration for a persistent volume (host type only works in a one node cluster like minikube)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: host-pv-log-data
+spec:
+  capacity: 
+    storage: 1Gi
+  volumeMode: Filesystem # or filesystem or Block
+  storageClassName: standard
+  accessModes:
+  # How can the volume be claimed
+    - ReadWriteOnce # Can be claime by multiple pods but they have to be in the same pod!!!
+    # - ReadOnlyMany # Many Nodes can claim the volume for read only
+    # - ReadWriteMany # Many Nodes can claim the volume for read write
+  hostPath:
+    path: /log-data
+    type: DirectoryOrCreate
+
+# IN ORDER TO USE THIS VOLUME THE PODS HAVE TO HAVE A "PERSISTANT VOLUME CLAIM"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: host-pv-log-data-claim
+spec:
+# VOLUME TO CLAIM BY NAME
+  volumeName: host-pv-log-data
+# TYPE OF ACCESSS TO VOLUME
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 1Gi

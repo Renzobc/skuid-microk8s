@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skuid-nav2
+  annotations:
+    k8s.v1.cni.cncf.io/networks: my-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app : skuid-nav2
+  template:
+    metadata:
+      labels:
+        app: skuid-nav2
+      annotations:
+        k8s.v1.cni.cncf.io/networks: my-network
+    spec:
+      containers:
+        - name: skuid-nav2
+          image: renzobc/skuid_nav2:v-4.0
+          env:
+            - name: RMW_IMPLEMENTATION
+              value: rmw_fastrtps_cpp
+          volumeMounts:
+            - mountPath: /root/.ros/log
+              name: logs
+      volumes:
+        - name: logs
+          persistentVolumeClaim: 
+            claimName: host-pv-log-data-claim

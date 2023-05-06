@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: skuid-ign-service
+spec:
+  selector:
+  # which pods to be part of the service, for IT, to expose port / ip to the outside world as a group with a fixed IP
+    app: skuid-ign-service
+  ports:
+    - protocol: 'TCP'
+      name: 'rest-port'
+      # Port to map of the fixed ip
+      port: 80
+      # Port inside the pod to be mapped
+      targetPort: 8080
+    - protocol: 'TCP'
+      name: 'ssh-port'
+      port: 22
+      targetPort: 22
+  # Outside world reacheable address, incoming traffic distributed equally
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skuid-bridge-service
+spec:
+  selector:
+    app : skuid-description
+  ports:
+    - protocol: 'TCP'
+      name: 'rest-port'
+      port: 80
+      targetPort: 8080
+    - protocol: 'TCP'
+      name: 'ssh-port'
+      port: 22
+      targetPort: 22
+  type: LoadBalancer
+

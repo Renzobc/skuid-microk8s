@@ -1,0 +1,79 @@
+# Deployment resource to create
+apiVersion: apps/v1
+# kind of k8s object
+kind: Deployment
+# Data about 
+metadata:
+  name: skuid-ign
+# how the deployment should be configured. ONE POD PER DEPLOYMENT
+spec:
+  replicas: 1
+  # Types of pod this deployment CAN control
+  selector: 
+    matchLabels:
+      ## All pods with the lables of the following "key:value" will be control by this deployment
+      app : skuid-ign
+      #app: skuid-description
+  #----------------------------------------------------------------------------
+  # The template of the pod that should be "replicated"
+  # template:
+  #   #kind: Pod
+  #   metadata:
+  #     labels:
+  #       app : skuid-description
+  #   spec:
+  #     containers: 
+  #       - name: skuid-bridge
+  #         image: renzobc/skuid_description:v-1.0
+
+  #         volumeMounts:
+  #           - mountPath: /root/.ros/log
+  #             name: logs
+  #     volumes:
+  #       - name: logs
+  #         persistentVolumeClaim:
+  #           claimName: host-pv-log-data-claim 
+  #----------------------------------------------------------------------------
+  template:
+    metadata:
+      labels:
+        # Key-value pair
+        app: skuid-ign
+    # how the pod should be configured
+    spec:
+      containers:
+        - name: skuid-ignition
+          image: renzobc/skuid_ignition:v-6.0
+          # env:
+          #   - name: ENV_DISPLAY
+          #     #value: :0
+          #     valueFrom:
+          #       configMapKeyRef: 
+          #         name: configuration-dds-router
+          #         key: ENV_DISPLAY
+
+          #   - name: "ENV_XAUTHORITY"
+          #     value: /run/user/1000/.mutter-Xwaylandauth.PCMQQ1
+          #   - name: ENV_QT_X11_NO_MITSHM
+          #     value: '1'
+          volumeMounts:
+          # Container internal path to persist data in the "ign-logs"
+          # Default  place where ignition stores logs
+            - mountPath: /root/.ignition/gazebo/log
+              # volume name
+              name: logs
+
+      # VOLUME DEFINITION
+      # volumes: 
+      #   - name: ign-logs
+      #     #emptyDir: {} # default setting of emptydir type volume
+      #     hostPath:
+      #       path: /ign-log-data
+      #       type: DirectoryOrCreate
+
+      # STABLISH PERSISTANT VOLUME CONNECTION
+      volumes:
+        - name: logs
+          persistentVolumeClaim: 
+            claimName: host-pv-log-data-claim
+

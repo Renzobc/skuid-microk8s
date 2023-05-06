@@ -1,0 +1,36 @@
+# Deployment resource to create
+apiVersion: apps/v1
+# kind of k8s object
+kind: Deployment
+# Data about 
+metadata:
+  name: skuid-bridge
+# how the deployment should be configured. ONE POD PER DEPLOYMENT
+spec:
+  replicas: 1
+  # Types of pod this deployment CAN control
+  selector: 
+    matchLabels:
+      ## All pods with the lables of the following "key:value" will be control by this deployment
+      app : skuid-decription
+      #app: skuid-description
+  #----------------------------------------------------------------------------
+  # The template of the pod that should be "replicated"
+  template:
+    #kind: Pod
+    metadata:
+      labels:
+        app : skuid-description
+    spec:
+      containers: 
+        - name: skuid-bridge
+          image: renzobc/skuid_description:v-1.0
+
+          volumeMounts:
+            - mountPath: /root/.ros/log
+              name: logs
+      volumes:
+        - name: logs
+          persistentVolumeClaim:
+            claimName: host-pv-log-data-claim 
+  #----------------------------------------------------------------------------

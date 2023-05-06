@@ -1,0 +1,186 @@
+version: "3"
+services:
+  ignbridge:
+    privileged: true 
+    container_name: skuid-sim
+    build: 
+      context: ./Ign_bridge
+      dockerfile: Dockerfile.kube
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=${XAUTHORITY}
+      - QT_X11_NO_MITSHM=1
+      - IGN_GAZEBO_RESOURCE_PATH=/app 
+      - IGN_PARTITION=$USERNAME
+      - IGNITION_VERSION=fortress
+      - IGN_VERBOSE=1
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - RMW_FASTRTPS_USE_QOS_FROM_XML=1
+      - FASTDDS_STATISTICS=HISTORY_LATENCY_TOPIC;NETWORK_LATENCY_TOPIC;PUBLICATION_THROUGHPUT_TOPIC;SUBSCRIPTION_THROUGHPUT_TOPIC;RTPS_SENT_TOPIC;RTPS_LOST_TOPIC;HEARTBEAT_COUNT_TOPIC;ACKNACK_COUNT_TOPIC;NACKFRAG_COUNT_TOPIC;GAP_COUNT_TOPIC;DATA_COUNT_TOPIC;RESENT_DATAS_TOPIC;SAMPLE_DATAS_TOPIC;PDP_PACKETS_TOPIC;EDP_PACKETS_TOPIC;DISCOVERY_TOPIC;PHYSICAL_DATA_TOPIC
+      - FASTDDS_ENVIRONMENT_FILE=/usr/workspaces/galactic/src/skuid_description/fastdds-conf/fastdds_environmetal.json
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/usr/workspaces/galactic/src/skuid_description/fastdds-conf/FASTDDS_PROFILES_FILE.xml
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      #- $XAUTH:${XAUTH}
+      # Share a Folder of the host to the container
+      - /home/renzo/Documents/Docker/skuid/Ign_bridge/ignition_models:/app
+      - /home/renzo/Documents/Docker/skuid/Ign_bridge/galactic:/usr/workspaces/galactic
+      - /home/renzo/Documents/Docker/skuid/Ign_bridge/galactic/src/skuid_description/logs:/.ros/log
+    network_mode: skuid-sim
+    command: ["tail", "-f", "/dev/null"]
+    #command: ["ros2", "run", "tf2_ros", "static_transform_publisher", "0 0 0 0 0 0" ,"scan", "skuid/scan/scan"]
+    # command: [ "ros2", "launch", "skuid_description", "skuid_description.launch.py", "autostart:=true" ]
+    
+  fastdds_visualizer:
+    privileged: true
+    container_name: fastdds-visualizer
+    image: ubuntu-plotjuggler-eprosima-edition:v1.0.0  
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=${XAUTHORITY}
+      - QT_X11_NO_MITSHM=1
+      - FASTDDS_STATISTICS=HISTORY_LATENCY_TOPIC;NETWORK_LATENCY_TOPIC;PUBLICATION_THROUGHPUT_TOPIC;SUBSCRIPTION_THROUGHPUT_TOPIC;RTPS_SENT_TOPIC;RTPS_LOST_TOPIC;HEARTBEAT_COUNT_TOPIC;ACKNACK_COUNT_TOPIC;NACKFRAG_COUNT_TOPIC;GAP_COUNT_TOPIC;DATA_COUNT_TOPIC;RESENT_DATAS_TOPIC;SAMPLE_DATAS_TOPIC;PDP_PACKETS_TOPIC;EDP_PACKETS_TOPIC;DISCOVERY_TOPIC;PHYSICAL_DATA_TOPIC
+    stdin_open: true
+    tty: true 
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: skuid-sim
+    #command: plotjuggler
+    depends_on:
+      - ignbridge
+
+
+  # nav2:
+  #   privileged: true
+  #   container_name: skuid_nav2
+  #   build: ./nav2-skuid-bringup
+
+  #   environment:
+  #     - FASTDDS_STATISTICS=HISTORY_LATENCY_TOPIC;NETWORK_LATENCY_TOPIC;PUBLICATION_THROUGHPUT_TOPIC;SUBSCRIPTION_THROUGHPUT_TOPIC;RTPS_SENT_TOPIC;RTPS_LOST_TOPIC;HEARTBEAT_COUNT_TOPIC;ACKNACK_COUNT_TOPIC;NACKFRAG_COUNT_TOPIC;GAP_COUNT_TOPIC;DATA_COUNT_TOPIC;RESENT_DATAS_TOPIC;SAMPLE_DATAS_TOPIC;PDP_PACKETS_TOPIC;EDP_PACKETS_TOPIC;DISCOVERY_TOPIC;PHYSICAL_DATA_TOPIC
+
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     # - /home/renzo/Documents/Docker/skuid/nav2-skuid-bringup/galactic:/user/workspaces/galactic
+    
+  #   network_mode: skuid-sim
+
+  #   #command: ["ros2", "launch", "skuid-nav2-bringup", "skuid-nav2.launch.py", "autostart:=true" ]
+  #   #command: ["tail","-f","/dev/null"]
+  #   depends_on:
+  #     - ignbridge
+
+  fastdds_monitor:
+    privileged: true
+    container_name: fastdds-monitor
+    image: ubuntu-fastdds-suite:v2.7.1
+      # context: path where dockerfile is
+      # dockerfile: Dockerfile-dev
+      # args:
+      #   container_id: 1
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=${XAUTHORITY}
+      - QT_X11_NO_MITSHM=1
+      - RMW_FASTRTPS_USE_QOS_FROM_XML=1
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/conf/fastdds-monitor.xml
+      - FASTDDS_STATISTICS=HISTORY_LATENCY_TOPIC;NETWORK_LATENCY_TOPIC;PUBLICATION_THROUGHPUT_TOPIC;SUBSCRIPTION_THROUGHPUT_TOPIC;RTPS_SENT_TOPIC;RTPS_LOST_TOPIC;HEARTBEAT_COUNT_TOPIC;ACKNACK_COUNT_TOPIC;NACKFRAG_COUNT_TOPIC;GAP_COUNT_TOPIC;DATA_COUNT_TOPIC;RESENT_DATAS_TOPIC;SAMPLE_DATAS_TOPIC;PDP_PACKETS_TOPIC;EDP_PACKETS_TOPIC;DISCOVERY_TOPIC;PHYSICAL_DATA_TOPIC
+    stdin_open: true
+    tty: true 
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./dds/eprossima/fastdds/conf:/conf
+    network_mode: skuid-sim
+    command: fastdds_monitor
+    depends_on:
+      - ignbridge
+  
+
+# FOR NAMED VOLUMES DECLARE A FOLLOWS
+# container CAN share named volumes
+# anonymous volumes do not get deleted when docker-compose down
+# volumes:
+#   data:
+#   logs:
+
+
+##-----------------------------------------------------------------------------------------------
+  # ignition:
+  #   privileged: true
+  #   container_name: ignition_container
+  #   build: 
+  #     context: ./Ignition
+  #     dockerfile: Dockerfile
+  #     # args:
+  #     #   container_id: 1
+
+  #   environment:
+  #     - DISPLAY=${DISPLAY}
+  #     - XAUTHORITY=${XAUTHORITY}
+  #     - QT_X11_NO_MITSHM=1
+  #     #- IGN_GAZEBO_RESOURCE_PATH=/app 
+  #     - IGN_PARTITION=$USERNAME
+  #     - IGNITION_VERSION=fortress
+  #     - IGN_VERBOSE=1
+  #     - PORT=2020
+  #   # env_file: 
+  #   #   - relative path to the .env file
+
+  #   # ports:
+  #   #   - "5000:80"
+  #   volumes:
+  #     # X11 share requires for local machine to accept the connect being 'xhost local:root' the way to enable. (Last line of .bashrc)
+  #     # Share the host x11 server
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     #- $XAUTH:${XAUTH}
+  #     # Share a Folder of the host to the container
+  #     - /home/renzo/Documents/Docker/skuid/Ignition/ignition_models:/app
+  #   network_mode: skuid
+## ------------------------------------------------------------------------------------------------
+  # bridge:
+  #   #image: ros:noetic
+  #   privileged: true
+  #   container_name: ignition_bridge
+  #   build: ./Ign_bridge
+  #     # context: path where dockerfile is
+  #     # dockerfile: Dockerfile-dev
+  #     # args:
+  #     #   container_id: 1
+
+
+  #   environment:
+  #     - DISPLAY=${DISPLAY}
+  #     - XAUTHORITY=${XAUTHORITY}
+  #     - QT_X11_NO_MITSHM=1
+  #     # - IGN_GAZEBO_RESOURCE_PATH=/usr/workspaces/ignition_models 
+  #     - IGN_PARTITION=$USERNAME
+  #     - IGNITION_VERSION=fortress
+  #     - IGN_VERBOSE=1
+  #     - RMW_IMPLEMENTATION=rmw_fastrtps_dynamic_cpp
+  #     #  NEEDS TO BE INSIDE THE DOCKER FILE
+  #     #- FASTDDS_STATISTICS=HISTORY_LATENCY_TOPIC;NETWORK_LATENCY_TOPIC;PUBLICATION_THROUGHPUT_TOPIC;SUBSCRIPTION_THROUGHPUT_TOPIC;RTPS_SENT_TOPIC;RTPS_LOST_TOPIC;HEARTBEAT_COUNT_TOPIC;ACKNACK_COUNT_TOPIC;NACKFRAG_COUNT_TOPIC;GAP_COUNT_TOPIC;DATA_COUNT_TOPIC;RESENT_DATAS_TOPIC;SAMPLE_DATAS_TOPIC;PDP_PACKETS_TOPIC;EDP_PACKETS_TOPIC;DISCOVERY_TOPIC;PHYSICAL_DATA_TOPIC
+
+  #   # --- interactive mode -it flag ---------------- 
+  #   stdin_open: true
+  #   tty: true 
+  #   # --------------------------
+
+  #   volumes:
+  #     # X11 share requires for local machine to accept the connect being 'xhost local:root' the way to enable. (Last line of .bashrc)
+  #     # Share the host x11 server
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     #- $XAUTH:$XAUTH
+  #     # Share a Folder of the host to the container (also relatives paths can be specified)
+  #     # - /home/renzo/Documents/Docker/skuid/Ign_bridge/galactic:/usr/workspaces/galactic
+    
+  #   network_mode: skuid
+  #   # networks:
+  #   #   - networkName
+    
+  #   # TAKES AS A PREFIX THE ENTRY POINT DESCRIBED IN THE DOCKERFILE
+  #   command: [ "ros2", "launch", "skuid_description", "skuid_description.launch.py", "autostart:=true" ]
+  #   #command: ["tail","-f","/dev/null"]
+
+  #   depends_on:
+  #     - ignition
+## ------------------------------------------------------------------------------------------------
+##----------------------------------------------------------------------------------------
